@@ -29,24 +29,24 @@ def obtener_agregar_items(request):
 # PUT y DELETE
 @csrf_exempt
 def modificar_eliminar_item(request, id):
-    if request.method == 'PUT':
+    item_encontrado = None
+    for item in items:
+        if item["id"] == id:
+            item_encontrado = item
+    if item_encontrado == None:
+        return JsonResponse({"error": "Item no encontrado"}, status=404)    
+
+    if request.method == 'GET':
+        return JsonResponse(item_encontrado)
+    
+    elif request.method == 'PUT':
         try:
             data = json.loads(request.body)
-
-            for item in items:
-                if item["id"] == id:
-                    item["nombre"] = data.get("nombre", item["nombre"])
-                    return JsonResponse(item)
-
-            return JsonResponse({"error": "Item no encontrado"}, status=404)
-
+            item_encontrado["nombre"] = data.get("nombre", item_encontrado["nombre"])
+            return JsonResponse(item_encontrado)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Formato JSON inválido"}, status=400)
 
     elif request.method == 'DELETE':
-        for item in items:
-            if item["id"] == id:
-                items.remove(item)
-                return JsonResponse({"mensaje": "Item eliminado"})
-
-        return JsonResponse({"error": "Item no encontrado"}, status=404)
+        items.remove(item_encontrado)
+        return JsonResponse({"mensaje": "Item eliminado"}, status=204)
